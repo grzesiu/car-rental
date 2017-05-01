@@ -51,13 +51,15 @@ class PoissonVector(metaclass = ABCMeta):
 class LeftShift(PoissonVector):
     def shift(self):
         self.probs[1] += self.probs[0]
-        self.probs = self.probs[1:] + [0]
+        self.probs.pop(0)
+        self.probs.append(0)
 
 
 class RightShift(PoissonVector): 
     def shift(self):
         self.probs[-2] += self.probs[-1]
-        self.probs = [0] + self.probs[:-1]
+        self.probs.pop(-1)
+        self.probs.insert(0, 0)
 
 if __name__ == "__main__":
     np.set_printoptions(formatter={'float': '{: 0.2f}'.format}, linewidth=200)
