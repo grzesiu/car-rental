@@ -3,6 +3,7 @@ import numpy as np
 import math
 import copy
 
+
 class PoissonMatrix(metaclass = ABCMeta):
     def __init__(self, vector):
         self.vector = vector
@@ -23,13 +24,15 @@ class PoissonMatrix(metaclass = ABCMeta):
         return cls(RightShift(lam, max_n))
 
 
+class TopDown(PoissonMatrix):
+    pass    
+
+
 class BottomUp(PoissonMatrix):
     def init_matrix(self):
         super().init_matrix()
         self.matrix = list(reversed(self.matrix))
 
-class TopDown(PoissonMatrix):
-    pass    
 
 class PoissonVector(metaclass = ABCMeta):
     def __init__(self, lam, max_n):
