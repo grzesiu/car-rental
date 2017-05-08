@@ -1,13 +1,15 @@
 import numpy as np
 import poisson
 
+    
+
 class Simulation:
     REWARD = 100
     PENALTY = 20
     RENTAL1 = (3, 3)
     RENTAL2 = (4, 2)
-    MAX_CARS = 20
-    MAX_MOVED = 5
+    MAX_CARS = 10
+    MAX_MOVED = 2
     DISCOUNT_FACTOR = 0.9
 
     def __init__(self):
@@ -31,7 +33,7 @@ class Simulation:
         for (y, x) in np.ndindex(self.shape):
             if x > y:
                 prizes[y][x] = Simulation.REWARD * (x - y)
-        return (rents.matrix * prizes) @ returns.matrix
+        return rents.matrix * prizes
 
     def init_policy(self):
         self.policy = np.empty(self.shape, dtype=np.int)
@@ -41,7 +43,7 @@ class Simulation:
     def run(self, k):
         z = 0
         while True:
-            for i in range(k):
+            for _ in range(k):
                 self.step()
             next_policy = self.next_policy()
 
@@ -60,7 +62,7 @@ class Simulation:
         next_utils = np.zeros(self.shape)
         for (y, x) in np.ndindex(self.shape):
             for (yn, xn) in np.ndindex(self.utils.shape):
-                next_utils += self.summand(self.policy[y][x], y, x, yn, xn)
+                next_utils[y][x] += self.summand(self.policy[y][x], y, x, yn, xn)
         self.utils = next_utils / sum(next_utils)
 
     def summand(self, action, y, x, yn, xn):
@@ -87,7 +89,7 @@ class Simulation:
 if __name__ == "__main__":
     np.set_printoptions(formatter={'float': '{: 0.2f}'.format}, linewidth=200)
     s = Simulation()
-    s.run(1)
+    s.run(5)
 
 # cars_solution.py:56: RuntimeWarning: overflow encountered in add
 #  next_utils += self.summand(self.policy[y][x], y, x, yn, xn)
