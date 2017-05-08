@@ -1,8 +1,8 @@
 import numpy as np
 import math
 
-REWARD = 100
-PENALTY = 20
+CAR_COST = 100
+MOVE_COST = 20
 RENTAL1 = (3, 3)
 RENTAL2 = (4, 2)
 MAX_CARS = 20
@@ -12,13 +12,17 @@ N_E = 5
 
 def poisson(lam, max_n):
     f = lambda n: lam ** n * math.exp(-lam) / math.factorial(n)
-    probs = np.vectorize(f)(np.arange(21))
-    probs[-1] = 1 - np.sum(probs[:-1])
-    return probs
+    p = [f(n) for n in range(max_n + 1)]
+    s = sum(p[:-1])
+    probs = []
+    for i in range(max_n + 1):
+        probs.append([0.0] * i + p[:-i-1] + [1.0 - s])
+        s -= probs[-1][-2]
 
+    return np.array(probs, dtype=np.float)
 
-def rewards():
-    pass
 
 if __name__ == "__main__":
+    np.set_printoptions(formatter={'float': '{: 0.2f}'.format}, linewidth=200)
     print(poisson(5, 20))
+
