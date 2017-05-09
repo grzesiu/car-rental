@@ -24,17 +24,19 @@ def poisson(lam, max_n):
         s -= probs[-1][-2]
     return np.array(probs, dtype=np.float)
 
-def reward(outer):
-    for (y,x) in np.ndindex(outer.shape):
-        outer[y][x] *= outer.shape[0] + outer.shape[1] - y - x - 2
-    return outer
+def cars_rented(rents_no_prob):
+    for (y,x) in np.ndindex(rents_no_prob.shape):
+        rents_no_prob[y][x] *= rents_no_prob.shape[0] + rents_no_prob.shape[1] - y - x - 2
+    return rents_no_prob
 
 def rewards(rents1, rents2, car_cost):
     r = np.empty_like(rents1)
     for (y,x) in np.ndindex(rents1.shape):
-        outer = np.outer(rents1[y][:y + 1], rents2[x][:x + 1]) 
-        r[y][x] = np.sum(car_cost * reward(outer)) 
+        rents_no_prob = np.outer(rents1[y][:y + 1], rents2[x][:x + 1]) 
+        r[y][x] = np.sum(car_cost * cars_rented(rents_no_prob)) 
     return r
+
+
 
 #def cars_rented(max_n):
 #    cars_rented = np.empty((max_n + 1, max_n + 1))
