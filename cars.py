@@ -1,19 +1,6 @@
 import numpy as np
 import math
 
-CAR_COST = 100
-MOVE_COST = 20
-
-RENTS1 = 3
-RENTS2 = 4
-RETURNS1 = 3
-RETURNS2 = 2
-
-MAX_CARS = 20
-MAX_MOVE = 5
-DISCOUNT_FACTOR = 0.9
-N_E = 5
-
 
 def get_poisson(lam, max_n):
     f = lambda n: lam ** n * math.exp(-lam) / math.factorial(n)
@@ -33,11 +20,11 @@ def get_cars_rented(rents_no_prob):
 
 
 def get_rewards(rents1, rents2, car_cost):
-    r = np.empty_like(rents1)
+    reward = np.empty_like(rents1)
     for (y,x) in np.ndindex(rents1.shape):
         rents_no_prob = np.outer(rents1[y][:y + 1], rents2[x][:x + 1]) 
-        r[y][x] = np.sum(car_cost * get_cars_rented(rents_no_prob)) 
-    return r
+        reward[y][x] = np.sum(car_cost * get_cars_rented(rents_no_prob)) 
+    return reward
 
 
 def get_possible_actions(max_cars, max_move):
@@ -49,83 +36,15 @@ def get_possible_actions(max_cars, max_move):
     return possible_actions
 
 
-def get_init_policy(max_cars, possible_actions):
-    policy = np.empty((max_cars + 1, max_cars + 1), dtype=np.int)
-    for s in np.ndindex(policy.shape):
-        policy[s] = np.random.choice(possible_actions[s])
-    return policy
-   
-
 def get_probs(rents1, returns1, rents2, returns2):
     return np.einsum('ij,kl->ikjl', rents1 @ returns1, rents2 @ returns2)
 
 
-def get_next_utility(rewards, policy, utility, probs, discount_factor, move_cost):
-    next_utility = np.empty_like(utility, dtype=np.float)
-    for (y, x) in np.ndindex(utility.shape):
-        ya = y - policy[y][x]
-        xa = x + policy[y][x]
-        r = rewards[ya][xa] - abs(policy[y][x]) * move_cost
-        next_utility[y][x] = r + discount_factor * np.sum(probs[ya][xa] * utility)
-    return next_utility
-
-
-def get_next_policy(possible_actions, probs, utility):
-    next_policy = np.empty_like(utility, dtype=np.int)
-    for (y, x) in np.ndindex(next_policy.shape):
-        for actions in possible_actions[y][x]:
-            m = 0
-            for a in np.nditer(actions):
-                ua = np.sum(probs[y - a][x + a] * utility)
-                if ua > m:
-                    m = ua
-                    next_policy[y][x] = a
-    return next_policy
-
-
-def iterate_policy(rewards, possible_actions, probs, discount_factor, max_cars, move_cost, k):
-    next_policy = get_init_policy(max_cars, possible_actions)
-    policy = np.empty_like(next_policy, dtype=np.int)
-    utility = np.zeros_like(rewards, dtype=np.int)
-
-    while not np.array_equal(next_policy, policy):
-        policy = next_policy
-        for _ in range(k):
-            utility = get_next_utility(rewards, policy, utility, probs, discount_factor, move_cost)
-
-        next_policy = get_next_policy(possible_actions, probs, utility)
-        print(utility)
-        print(next_policy)
-
-def aiterate_utility(rewards, possible_actions, probs, discount_factor, max_cars, move_cost):
-    policy = np.zeros_like(rewards, dtype=np.int)
-    utility = np.zeros_like(rewards)
-    next_utility = np.ones_like(rewards)
-    i = 0 
-    while not np.array_equal(next_utility, utility):
-        print(i)
-        i += 1
-        utility = np.copy(next_utility)
-        for (y, x) in np.ndindex(utility.shape):
-            for actions in possible_actions[y][x]:
-                m = 0
-                for a in np.nditer(actions):
-                    r = rewards[y - a][x + a] - abs(a) * move_cost 
-                    u = np.sum(probs[y - a][x + a] * (r + discount_factor * utility))
-                    if u > m:
-                        m = u
-                        next_utility[y][x] = u
-                        policy[y][x] = a
-    return policy
- 
-def iterate_utility(rewards, possible_actions, probs, discount_factor, max_cars, move_cost):
-    utility = np.zeros_like(rewards)
-    policy = np.zeros_like(utility, dtype=np.int)
-    next_utility = np.ones_like(rewards)
-    i = 0
-    while not np.array_equal(next_utility, utility):
-        print(i)
-        i += 1
+def get_policy(rewards, possible_actions, probs, discount_factor, max_cars, move_cost):
+    next_utility = np.ones((max_cars + 1, max_cars + 1))
+    utility = np.zeros((max_cars + 1, max_cars + 1))
+    policy = np.zeros((max_cars + 1, max_cars + 1), dtype=np.int)
+    while not np.array_equal(utility, next_utility):
         utility = np.copy(next_utility)
         for (y, x) in np.ndindex(utility.shape):
             m = 0
@@ -137,9 +56,30 @@ def iterate_utility(rewards, possible_actions, probs, discount_factor, max_cars,
                     next_utility[y][x] = u
                     m = u
     return policy
-    
+
+
+def print_policy(policy, max_cars):
+    for i in range(max_cars + 1):
+        for j in range(max_cars + 1):
+            print("{:2d} ".format(policy[i][j]), end='')
+        print()
+
+
 if __name__ == "__main__":
-    np.set_printoptions(formatter={'float': '{: 0.2f}'.format}, linewidth=100000)
+
+    CAR_COST = 100
+
+    MOVE_COST = 20
+    
+    RENTS1 = 3
+    RENTS2 = 4
+    RETURNS1 = 3
+    RETURNS2 = 2
+    
+    MAX_CARS = 20
+    MAX_MOVE = 5
+
+    DISCOUNT_FACTOR = 0.9
 
     rents1 = np.flipud(np.fliplr(get_poisson(RENTS1, MAX_CARS)))
     rents2 = np.flipud(np.fliplr(get_poisson(RENTS2, MAX_CARS)))
@@ -152,4 +92,5 @@ if __name__ == "__main__":
 
     probs = get_probs(rents1, returns1, rents2, returns2)
 
-    print(iterate_utility(rewards, possible_actions, probs, DISCOUNT_FACTOR, MAX_CARS, MOVE_COST))
+    policy = get_policy(rewards, possible_actions, probs, DISCOUNT_FACTOR, MAX_CARS, MOVE_COST)
+    print_policy(policy, MAX_CARS)
