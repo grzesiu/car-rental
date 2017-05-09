@@ -84,7 +84,6 @@ def get_next_policy(possible_actions, probs, utility):
 
 
 def iterate_policy(rewards, possible_actions, probs, discount_factor, max_cars, move_cost, k):
-    print(possible_actions)
     next_policy = get_init_policy(max_cars, possible_actions)
     policy = np.empty_like(next_policy, dtype=np.int)
     utility = np.zeros_like(rewards, dtype=np.int)
@@ -97,7 +96,24 @@ def iterate_policy(rewards, possible_actions, probs, discount_factor, max_cars, 
         next_policy = get_next_policy(possible_actions, probs, utility)
         print(utility)
         print(next_policy)
-    
+
+def iterate_utility(rewards, possible_actions, probs, discount_factor, max_cars, move_cost):
+    policy = np.zeros_like(rewards, dtype=np.int)
+    utility = np.zeros_like(rewards)
+    next_utility = np.ones_like(rewards)
+    while not np.array_equal(next_utility, utility):
+        utility = next_utility
+        for (y, x) in np.ndindex(utility.shape):
+            for actions in possible_actions[y][x]:
+                m = 0
+                for a in np.nditer(actions):
+                    ya = y - policy[y][x]
+                    xa = x + policy[y][x]
+                    u = rewards[ya][xa] - abs(policy[y][x]) * move_cost + discount_factor * np.sum(probs[ya][xa] * utility)
+                    if u > m:
+                        next_utility[y][x] = u
+                        policy[y][x] = a
+    return policy
     
 if __name__ == "__main__":
     np.set_printoptions(formatter={'float': '{: 0.2f}'.format}, linewidth=100000)
@@ -113,4 +129,4 @@ if __name__ == "__main__":
 
     probs = get_probs(rents1, returns1, rents2, returns2)
 
-    iterate_policy(rewards, possible_actions, probs, DISCOUNT_FACTOR, MAX_CARS, MOVE_COST, 1)
+    print(iterate_utility(rewards, possible_actions, probs, DISCOUNT_FACTOR, MAX_CARS, MOVE_COST))
