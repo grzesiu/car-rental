@@ -10,7 +10,7 @@ RETURNS_1 = 3
 RETURNS_2 = 2
 
 MAX_CARS = 20
-MAX_MOVED = 5
+MAX_MOVE = 5
 DISCOUNT_FACTOR = 0.9
 N_E = 5
 
@@ -36,13 +36,13 @@ def rewards(rents1, rents2, car_cost):
         r[y][x] = np.sum(car_cost * cars_rented(rents_no_prob)) 
     return r
 
-
-
-#def cars_rented(max_n):
-#    cars_rented = np.empty((max_n + 1, max_n + 1))
-#    for (y, x) in np.ndindex(cars_rented.shape):
-#        cars_rented[y][x] = 2 * max_n - y - x
-#    return cars_rented
+def possible_actions(max_cars, max_move):
+    shape = max_cars + 1, max_cars + 1
+    possible_actions = np.empty(shape, dtype=object)
+    for (y, x) in np.ndindex(shape):
+        possible_actions[y][x] = np.arange(-min(x, max_cars - y, max_move), 
+                min(y, max_cars - x, max_move) + 1, dtype=np.int)
+        print(y, x, possible_actions[y][x])
 
 if __name__ == "__main__":
     np.set_printoptions(formatter={'float': '{: 0.2f}'.format}, linewidth=200)
@@ -57,3 +57,4 @@ if __name__ == "__main__":
     print(rents1)
     print(rents2)
     print(rewards(rents1, rents2, CAR_COST))
+    print(possible_actions(MAX_CARS, MAX_MOVE))
